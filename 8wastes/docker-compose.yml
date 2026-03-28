@@ -1,0 +1,13 @@
+services:
+  kiosk-8wastes:
+    build: .
+    container_name: kiosk-8wastes
+    restart: unless-stopped
+    ports:
+      - "3402:80"
+    networks:
+      - n0v8v_n0v8v-net
+
+networks:
+  n0v8v_n0v8v-net:
+    external: true

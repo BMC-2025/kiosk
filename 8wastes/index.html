@@ -1,0 +1,949 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>The 8 Wastes — Know the Enemy</title>
+<style>
+  *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+  :root {
+    --c-bg: #0d0d0f;
+    --c-surface: #16161a;
+    --c-border: #2a2a30;
+    --c-text: #f0f0f5;
+    --c-muted: #8888a0;
+    --accent: #ffffff;
+    --slide-duration: 22000;
+  }
+
+  html, body {
+    width: 100%; height: 100%;
+    background: var(--c-bg);
+    color: var(--c-text);
+    font-family: -apple-system, 'Segoe UI', system-ui, sans-serif;
+    overflow: hidden;
+    cursor: none;
+  }
+
+  /* SLIDE CONTAINER */
+  #kiosk {
+    width: 100vw; height: 100vh;
+    position: relative;
+    overflow: hidden;
+  }
+
+  .slide {
+    position: absolute;
+    inset: 0;
+    display: flex;
+    flex-direction: column;
+    opacity: 0;
+    transform: translateX(60px);
+    transition: opacity 0.6s ease, transform 0.6s ease;
+    pointer-events: none;
+  }
+  .slide.active {
+    opacity: 1;
+    transform: translateX(0);
+    pointer-events: auto;
+  }
+  .slide.exit {
+    opacity: 0;
+    transform: translateX(-60px);
+    transition: opacity 0.5s ease, transform 0.5s ease;
+  }
+
+  /* PROGRESS BAR */
+  #progress-bar {
+    position: fixed;
+    bottom: 0; left: 0;
+    height: 4px;
+    background: var(--accent);
+    width: 0%;
+    transition: width linear;
+    z-index: 100;
+    opacity: 0.7;
+  }
+
+  /* SLIDE COUNT */
+  #slide-count {
+    position: fixed;
+    bottom: 14px; right: 20px;
+    font-size: 17px;
+    color: var(--c-muted);
+    z-index: 100;
+    letter-spacing: 0.08em;
+  }
+
+  /* NAV ARROWS */
+  .nav-btn {
+    position: fixed;
+    top: 50%; transform: translateY(-50%);
+    width: 52px; height: 52px;
+    background: rgba(255,255,255,0.06);
+    border: 1px solid rgba(255,255,255,0.1);
+    border-radius: 50%;
+    display: flex; align-items: center; justify-content: center;
+    cursor: pointer;
+    z-index: 100;
+    color: rgba(255,255,255,0.4);
+    font-size: 20px;
+    transition: background 0.2s, color 0.2s;
+  }
+  .nav-btn:hover { background: rgba(255,255,255,0.12); color: white; }
+  #nav-prev { left: 16px; }
+  #nav-next { right: 16px; }
+
+  /* FULLSCREEN BTN */
+  #fs-btn {
+    position: fixed;
+    top: 14px; right: 16px;
+    background: rgba(255,255,255,0.05);
+    border: 1px solid rgba(255,255,255,0.08);
+    border-radius: 6px;
+    color: var(--c-muted);
+    font-size: 11px;
+    padding: 5px 10px;
+    cursor: pointer;
+    z-index: 100;
+    letter-spacing: 0.06em;
+    text-transform: uppercase;
+  }
+  #fs-btn:hover { background: rgba(255,255,255,0.1); color: var(--c-text); }
+
+  /* ─── SLIDE TYPES ─────────────────────────────────────────── */
+
+  /* TITLE SLIDE */
+  .slide-title {
+    align-items: center;
+    justify-content: center;
+    text-align: center;
+    padding: 60px;
+    background: radial-gradient(ellipse at 60% 40%, #1a0a0a 0%, #0d0d0f 70%);
+  }
+  .title-eyebrow {
+    font-size: 18px;
+    letter-spacing: 0.25em;
+    text-transform: uppercase;
+    color: var(--c-muted);
+    margin-bottom: 28px;
+  }
+  .title-main {
+    font-size: clamp(64px, 8vw, 108px);
+    font-weight: 800;
+    line-height: 1;
+    letter-spacing: -0.03em;
+    background: linear-gradient(135deg, #ffffff 0%, #888888 100%);
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+    background-clip: text;
+    margin-bottom: 24px;
+  }
+  .title-sub {
+    font-size: clamp(24px, 2.8vw, 36px);
+    color: var(--c-muted);
+    max-width: 700px;
+    line-height: 1.5;
+    font-weight: 400;
+  }
+  .title-stat {
+    margin-top: 48px;
+    font-size: 20px;
+    color: rgba(255,255,255,0.3);
+    font-style: italic;
+    letter-spacing: 0.04em;
+  }
+
+  /* DOWNTIME OVERVIEW */
+  .slide-overview {
+    padding: 50px 60px 60px;
+    justify-content: center;
+  }
+  .overview-header {
+    text-align: center;
+    margin-bottom: 40px;
+  }
+  .overview-title {
+    font-size: clamp(16px, 1.8vw, 22px);
+    letter-spacing: 0.2em;
+    text-transform: uppercase;
+    color: var(--c-muted);
+    margin-bottom: 10px;
+  }
+  .overview-word {
+    font-size: clamp(44px, 6vw, 80px);
+    font-weight: 800;
+    letter-spacing: 0.15em;
+    line-height: 1;
+  }
+  .overview-grid {
+    display: grid;
+    grid-template-columns: repeat(4, 1fr);
+    gap: 14px;
+  }
+  .overview-card {
+    background: var(--c-surface);
+    border: 1px solid var(--c-border);
+    border-radius: 12px;
+    padding: 20px 16px;
+    text-align: center;
+    transition: transform 0.2s;
+    border-top: 3px solid var(--card-accent, #444);
+  }
+  .overview-letter {
+    font-size: 48px;
+    font-weight: 800;
+    line-height: 1;
+    color: var(--card-accent, #888);
+    margin-bottom: 6px;
+  }
+  .overview-name {
+    font-size: 18px;
+    font-weight: 600;
+    color: var(--c-text);
+    margin-bottom: 6px;
+  }
+  .overview-def {
+    font-size: 14px;
+    color: var(--c-muted);
+    line-height: 1.4;
+  }
+
+  /* WASTE SLIDE */
+  .slide-waste {
+    padding: 0;
+    flex-direction: row;
+  }
+  .waste-sidebar {
+    width: 250px;
+    min-width: 250px;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    padding: 40px 20px;
+    background: var(--waste-color, #333);
+    position: relative;
+    overflow: hidden;
+  }
+  .waste-sidebar::before {
+    content: '';
+    position: absolute;
+    inset: -20px;
+    background: radial-gradient(ellipse at center, rgba(255,255,255,0.08) 0%, transparent 70%);
+  }
+  .waste-big-letter {
+    font-size: 155px;
+    font-weight: 900;
+    line-height: 1;
+    color: rgba(255,255,255,0.15);
+    position: absolute;
+    top: 10px;
+    right: -10px;
+    letter-spacing: -0.05em;
+  }
+  .waste-letter-front {
+    font-size: 120px;
+    font-weight: 900;
+    line-height: 1;
+    color: white;
+    position: relative;
+    z-index: 1;
+    text-shadow: 0 4px 30px rgba(0,0,0,0.3);
+  }
+  .waste-name-sidebar {
+    font-size: 20px;
+    font-weight: 700;
+    color: rgba(255,255,255,0.9);
+    text-align: center;
+    margin-top: 10px;
+    position: relative;
+    z-index: 1;
+    letter-spacing: 0.05em;
+    text-transform: uppercase;
+  }
+  .waste-number {
+    position: absolute;
+    bottom: 16px;
+    font-size: 15px;
+    color: rgba(255,255,255,0.4);
+    letter-spacing: 0.1em;
+    z-index: 1;
+  }
+
+  .waste-main {
+    flex: 1;
+    display: flex;
+    flex-direction: column;
+    padding: 24px 36px 18px;
+    overflow: hidden;
+  }
+  .waste-def {
+    font-size: clamp(22px, 2.4vw, 30px);
+    font-weight: 500;
+    line-height: 1.4;
+    color: var(--c-text);
+    margin-bottom: 8px;
+    max-width: 900px;
+  }
+  .waste-stat {
+    font-size: 16px;
+    color: var(--waste-color);
+    font-style: italic;
+    margin-bottom: 16px;
+    padding-left: 14px;
+    border-left: 3px solid var(--waste-color);
+  }
+
+  .env-grid {
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
+    gap: 12px;
+    margin-bottom: 12px;
+  }
+  .env-card {
+    background: var(--c-surface);
+    border: 1px solid var(--c-border);
+    border-radius: 10px;
+    padding: 14px 16px;
+  }
+  .env-label {
+    font-size: 13px;
+    font-weight: 700;
+    letter-spacing: 0.16em;
+    text-transform: uppercase;
+    color: var(--waste-color);
+    margin-bottom: 10px;
+    display: flex;
+    align-items: center;
+    gap: 6px;
+  }
+  .env-label span { opacity: 0.6; font-size: 18px; }
+  .env-list {
+    list-style: none;
+    display: flex;
+    flex-direction: column;
+    gap: 9px;
+  }
+  .env-list li {
+    font-size: 17px;
+    color: rgba(240,240,245,0.85);
+    line-height: 1.35;
+    padding-left: 16px;
+    position: relative;
+  }
+  .env-list li::before {
+    content: '›';
+    position: absolute;
+    left: 0;
+    color: var(--waste-color);
+    font-weight: 700;
+    font-size: 20px;
+    line-height: 1.1;
+  }
+
+  .action-grid {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 12px;
+  }
+  .action-card {
+    background: var(--c-surface);
+    border: 1px solid var(--c-border);
+    border-radius: 10px;
+    padding: 14px 18px;
+  }
+  .action-label {
+    font-size: 13px;
+    font-weight: 700;
+    letter-spacing: 0.16em;
+    text-transform: uppercase;
+    margin-bottom: 10px;
+  }
+  .action-label.spot { color: #fbbf24; }
+  .action-label.fix { color: #34d399; }
+  .action-list {
+    list-style: none;
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+  }
+  .action-list li {
+    font-size: 16px;
+    color: rgba(240,240,245,0.8);
+    line-height: 1.35;
+    padding-left: 18px;
+    position: relative;
+  }
+  .action-list.spot li::before { content: '●'; position: absolute; left: 0; color: #fbbf24; font-size: 8px; top: 5px; }
+  .action-list.fix li::before  { content: '●'; position: absolute; left: 0; color: #34d399; font-size: 8px; top: 5px; }
+
+  /* CLOSING SLIDE */
+  .slide-close {
+    align-items: center;
+    justify-content: center;
+    text-align: center;
+    padding: 60px;
+    background: radial-gradient(ellipse at 40% 60%, #020b10 0%, #0d0d0f 70%);
+  }
+  .close-eyebrow {
+    font-size: 18px;
+    letter-spacing: 0.2em;
+    text-transform: uppercase;
+    color: var(--c-muted);
+    margin-bottom: 24px;
+  }
+  .close-headline {
+    font-size: clamp(40px, 5.5vw, 72px);
+    font-weight: 800;
+    line-height: 1.1;
+    letter-spacing: -0.02em;
+    max-width: 820px;
+    margin-bottom: 28px;
+  }
+  .close-headline em {
+    font-style: normal;
+    background: linear-gradient(90deg, #3b82f6, #8b5cf6, #ec4899);
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+    background-clip: text;
+  }
+  .close-body {
+    font-size: clamp(20px, 2.2vw, 26px);
+    color: var(--c-muted);
+    max-width: 760px;
+    line-height: 1.55;
+    margin-bottom: 48px;
+  }
+  .close-cards {
+    display: flex;
+    gap: 20px;
+    justify-content: center;
+  }
+  .close-card {
+    background: var(--c-surface);
+    border: 1px solid var(--c-border);
+    border-radius: 12px;
+    padding: 22px 28px;
+    text-align: left;
+    max-width: 220px;
+  }
+  .close-card-icon { font-size: 36px; margin-bottom: 12px; }
+  .close-card-title { font-size: 20px; font-weight: 700; margin-bottom: 8px; }
+  .close-card-body { font-size: 16px; color: var(--c-muted); line-height: 1.5; }
+</style>
+</head>
+<body>
+
+<div id="kiosk"></div>
+
+<div id="progress-bar"></div>
+<div id="slide-count"></div>
+
+<button class="nav-btn" id="nav-prev" onclick="go(-1)">&#8592;</button>
+<button class="nav-btn" id="nav-next" onclick="go(1)">&#8594;</button>
+<button id="fs-btn" onclick="toggleFS()">&#x26F6; Fullscreen</button>
+
+<script>
+const WASTES = [
+  {
+    letter: 'D', name: 'Defects', color: '#ef4444',
+    def: 'Any output that does not meet requirements — forcing rework, repair, scrapping, or correction.',
+    stat: 'Rework and scrap can consume 20–30% of production capacity in manufacturers that have not addressed root causes.',
+    envs: [
+      { label: 'Manufacturing', icon: '⚙', examples: [
+        'Machined parts out of tolerance requiring rework',
+        'Welds that fail inspection and need grinding',
+        'Assembly errors discovered at final test',
+        'Surface finish defects from worn tooling'
+      ]},
+      { label: 'Distribution', icon: '📦', examples: [
+        'Orders picked with wrong items or quantities',
+        'Damaged goods from improper packaging',
+        'Mislabeled shipments triggering returns',
+        'Inbound receipts with incorrect counts'
+      ]},
+      { label: 'Office', icon: '💼', examples: [
+        'Reports with data errors requiring revision',
+        'Purchase orders with wrong pricing or items',
+        'Data entry mistakes that cascade downstream',
+        'Emails sent to the wrong recipient'
+      ]}
+    ],
+    spot: [
+      'Rework stations with growing backlogs',
+      'Quality hold areas or "reject" red bins',
+      'Complaints from the next process or customer',
+      'High scrap rates on production reports'
+    ],
+    fix: [
+      'Mistake-proofing (poka-yoke) at the source',
+      'Standard work instructions with visual aids',
+      'First-time quality checks before passing work on',
+      'Root cause analysis — fix the process, not just the symptom'
+    ]
+  },
+  {
+    letter: 'O', name: 'Overproduction', color: '#f97316',
+    def: 'Making more than is needed, faster than needed, or before the next step is ready to use it.',
+    stat: 'Often called the "mother of all waste" — overproduction generates and conceals almost every other waste on this list.',
+    envs: [
+      { label: 'Manufacturing', icon: '⚙', examples: [
+        'Running equipment to keep operators busy between orders',
+        'Batch processing parts before downstream is ready',
+        'Building to forecast when orders haven\'t been placed',
+        'Over-producing to hit efficiency metrics'
+      ]},
+      { label: 'Distribution', icon: '📦', examples: [
+        'Pre-packing orders before dock space is available',
+        'Picking an entire wave before staging area is clear',
+        'Printing labels before items are confirmed received',
+        'Staging trucks before drivers are scheduled'
+      ]},
+      { label: 'Office', icon: '💼', examples: [
+        'Generating reports that nobody reads or acts on',
+        'Adding detail to presentations beyond what was asked',
+        'Sending emails CC\'ing people who don\'t need them',
+        'Entering data into systems before it\'s actually needed'
+      ]}
+    ],
+    spot: [
+      'Large piles of WIP between workstations',
+      'Finished goods storage at capacity',
+      'Long lead times despite everyone being "busy"',
+      'Work piling up at downstream steps'
+    ],
+    fix: [
+      'Produce only when pulled by the next step (pull system)',
+      'Smaller batch sizes matched to actual demand',
+      'Level and pace production to takt time',
+      'Challenge every "build ahead" habit — ask who is waiting for it right now'
+    ]
+  },
+  {
+    letter: 'W', name: 'Waiting', color: '#eab308',
+    def: 'Any time people, equipment, or materials sit idle while waiting for the next step to begin.',
+    stat: 'In most manufacturing and office processes, the product or work request spends 80–95% of its time waiting — not being worked on.',
+    envs: [
+      { label: 'Manufacturing', icon: '⚙', examples: [
+        'Operators waiting for material delivery or tooling changes',
+        'Equipment downtime while maintenance is located',
+        'Parts staged waiting for quality sign-off',
+        'Machines idle waiting for the previous operation to finish'
+      ]},
+      { label: 'Distribution', icon: '📦', examples: [
+        'Trucks queued at dock doors with no open door assigned',
+        'Pickers waiting for the WMS to update or print labels',
+        'Staff waiting for supervisor approval to proceed',
+        'Inbound product waiting for a putaway location to be assigned'
+      ]},
+      { label: 'Office', icon: '💼', examples: [
+        'Waiting days for an email reply before work can proceed',
+        'Meetings that start 10–15 minutes late',
+        'Approvals bottlenecked at one person\'s inbox',
+        'Waiting for slow systems or applications to load'
+      ]}
+    ],
+    spot: [
+      'People watching machines or watching a screen',
+      'Empty hands between clearly defined tasks',
+      'Queues of work visible at certain stations or inboxes',
+      'Recurring "I\'m waiting on..." in standup or status meetings'
+    ],
+    fix: [
+      'Cross-train to eliminate single-person bottlenecks',
+      'Preventive maintenance to reduce unplanned downtime',
+      'Pre-stage materials and information before the work starts',
+      'Define clear response time expectations for approvals'
+    ]
+  },
+  {
+    letter: 'N', name: 'Non-Utilized Talent', color: '#22c55e',
+    def: 'Failing to use the knowledge, skills, creativity, and improvement ideas of the people doing the work every day.',
+    stat: 'Companies with active employee improvement programs generate 3–5x more actionable ideas per year — and resolve problems faster because the people closest to them are involved.',
+    envs: [
+      { label: 'Manufacturing', icon: '⚙', examples: [
+        'Experienced machinists with no channel to suggest process improvements',
+        'Operators who spot recurring problems but have no way to report them',
+        'Skills and certifications going unused due to rigid job classifications',
+        'Frontline workers excluded from layout or tool selection decisions'
+      ]},
+      { label: 'Distribution', icon: '📦', examples: [
+        'Experienced pickers with slotting ideas who are never asked',
+        'Supervisors who identify inefficiencies but have no improvement process to plug into',
+        'Bilingual staff whose language skills go unused for signage and training',
+        'Seasonal workers who notice problems but feel too temporary to say anything'
+      ]},
+      { label: 'Office', icon: '💼', examples: [
+        'Employees who see better ways to work but fear speaking up',
+        'Skills gained at prior jobs never applied here',
+        'Training completed but roles don\'t allow application',
+        'Customer-facing staff with market intelligence that never reaches leadership'
+      ]}
+    ],
+    spot: [
+      'High turnover — people leave when they feel unheard',
+      '"That\'s not my job" or "nobody would listen anyway"',
+      'Same problems recurring despite frontline awareness',
+      'No formal idea capture or follow-through process'
+    ],
+    fix: [
+      'Regular frontline improvement huddles (15 minutes, weekly)',
+      'Idea submission process with committed follow-through',
+      'Cross-functional project teams that include operators',
+      'Publicly recognize suggestions that get implemented — even small ones'
+    ]
+  },
+  {
+    letter: 'T', name: 'Transportation', color: '#3b82f6',
+    def: 'Moving materials, products, or information more than is necessary — every extra move adds cost, risk, and delay without adding value.',
+    stat: 'Transportation never makes a product better. It only risks damaging it, losing it, or delaying it.',
+    envs: [
+      { label: 'Manufacturing', icon: '⚙', examples: [
+        'Moving WIP across the facility to a distant operation',
+        'Routing parts through a central inspection area after every step',
+        'Staging areas located far from point of use',
+        'Forklifts making laps to deliver small quantities to multiple lines'
+      ]},
+      { label: 'Distribution', icon: '📦', examples: [
+        'Product touching: receiving → bulk storage → reserve → pick → stage → load',
+        'Cross-docking inefficiencies that add a put-and-pull step',
+        'Long travel paths because high-velocity items are not near shipping',
+        'Moving product from dock to floor and back again during inventory'
+      ]},
+      { label: 'Office', icon: '💼', examples: [
+        'Files passed through multiple desks before any action is taken',
+        'Documents emailed → printed → signed → scanned → re-emailed',
+        'Work traveling between buildings for review that could be done remotely',
+        'Approvals requiring physical presence rather than digital sign-off'
+      ]}
+    ],
+    spot: [
+      'Forklifts or carts constantly moving material with no clear destination',
+      'Long travel paths visible on a floor map or spaghetti diagram',
+      'Documents with multiple "forwarded from" chains or routing stamps',
+      'Items handled more than once before reaching their next operation'
+    ],
+    fix: [
+      'Value stream map to make every transport step visible — then challenge each one',
+      'Cellular layout: co-locate sequential operations',
+      'Digital workflows to eliminate physical document movement entirely',
+      'Flow-through and cross-dock design for high-velocity distribution items'
+    ]
+  },
+  {
+    letter: 'I', name: 'Excess Inventory', color: '#8b5cf6',
+    def: 'Holding more materials, work-in-process, or finished goods than is needed to support current demand.',
+    stat: 'Excess inventory typically costs 25–30% of its own value per year in carrying costs — space, handling, obsolescence, and working capital.',
+    envs: [
+      { label: 'Manufacturing', icon: '⚙', examples: [
+        'Months of raw material staged on the production floor',
+        'Large WIP buffers parked between operations "just in case"',
+        'Finished goods warehouse full while some items are on backorder',
+        'Spare parts stockpile with items that haven\'t been used in years'
+      ]},
+      { label: 'Distribution', icon: '📦', examples: [
+        'Overstock creating congestion in pick aisles',
+        'Obsolete SKUs occupying prime slotting locations',
+        'Safety stock set far beyond actual demand variation',
+        'Seasonal returns stored with no clear disposition plan'
+      ]},
+      { label: 'Office', icon: '💼', examples: [
+        'Stacks of pending work that obscure what is actually urgent',
+        'Redundant data stored across multiple systems and spreadsheets',
+        'Outdated forms still printed and stocked at every workstation',
+        'Email inboxes with thousands of unread or unprocessed messages'
+      ]}
+    ],
+    spot: [
+      'Storage areas that are always full — no open locations',
+      'Materials sitting with no clear label, owner, or expected use date',
+      'High inventory carrying costs on financial reports',
+      'Items expiring, becoming obsolete, or damaged before use'
+    ],
+    fix: [
+      'Demand-driven replenishment — kanban cards, min/max levels',
+      'Regular inventory audits and structured purge cycles',
+      'Supplier consignment for high-cost, slow-moving items',
+      '5S to expose clutter and force disposition decisions'
+    ]
+  },
+  {
+    letter: 'M', name: 'Motion', color: '#ec4899',
+    def: 'Unnecessary physical movement by people in the course of doing their work — reaching, bending, searching, walking extra steps.',
+    stat: 'Workers in poorly organized environments often walk 8–12 miles per day beyond what the work actually requires.',
+    envs: [
+      { label: 'Manufacturing', icon: '⚙', examples: [
+        'Reaching or bending repeatedly for tools not stored at point of use',
+        'Walking to a shared tool crib multiple times per shift',
+        'Re-handling parts because staging is not at the right height or location',
+        'Searching for gauges, fixtures, or consumables during setup'
+      ]},
+      { label: 'Distribution', icon: '📦', examples: [
+        'Pickers traveling excessive distances per pick due to poor slotting',
+        'High-velocity items placed in low-ergonomic shelf positions',
+        'Returning to the start of an aisle for forgotten items',
+        'Scanning equipment stored away from the pick path'
+      ]},
+      { label: 'Office', icon: '💼', examples: [
+        'Walking to a shared printer multiple times daily for small print jobs',
+        'Searching through filing cabinets or shared drives for documents',
+        'Navigating a cluttered desk to find tools needed every hour',
+        'Multiple mouse-clicks and screen navigation to reach a common function'
+      ]}
+    ],
+    spot: [
+      'Trace paths on a floor map (spaghetti diagram) — the tangle shows the waste',
+      'Ergonomic strain reports or musculoskeletal complaints',
+      'Excessive steps counted per unit of output',
+      'Operators visibly searching rather than working'
+    ],
+    fix: [
+      '5S workplace organization — a place for everything, everything in its place',
+      'Shadow boards and point-of-use storage for tools',
+      'ABC slotting: high-velocity items in the ergonomic "golden zone"',
+      'Digital documents and shortcuts to eliminate physical search'
+    ]
+  },
+  {
+    letter: 'E', name: 'Extra Processing', color: '#06b6d4',
+    def: 'Doing more work than the customer or the next step requires — redundant steps, over-engineering, unnecessary approvals, and reformatting.',
+    stat: 'In most processes, value-added time is less than 5% of total lead time. The rest is waste — and extra processing hides inside that number.',
+    envs: [
+      { label: 'Manufacturing', icon: '⚙', examples: [
+        'Polishing or finishing surfaces the customer will never see',
+        'Holding tighter tolerances than the print or customer requires',
+        'Cleaning parts that will be cleaned again in the next operation',
+        'Multiple quality checks on the same characteristic'
+      ]},
+      { label: 'Distribution', icon: '📦', examples: [
+        'Counting product multiple times between receiving and shipping',
+        'Double-verifying orders that an automated scan already confirmed',
+        'Repackaging product that will ship the same day anyway',
+        'Generating paper documentation for digital-only transactions'
+      ]},
+      { label: 'Office', icon: '💼', examples: [
+        'Reports that include columns nobody ever reads or uses',
+        'Multiple levels of approval for purchases under $50',
+        'Re-entering data from one system into another by hand',
+        'Formatting documents to standards that exist only by habit'
+      ]}
+    ],
+    spot: [
+      'Steps in a process map that draw a blank when you ask "who needs this?"',
+      'Redundant checks or sign-offs that duplicate upstream verification',
+      'Work that gets undone or redone by the next person in line',
+      '"We\'ve always done it this way" as the only explanation for a step'
+    ],
+    fix: [
+      'Process map every step and ask: does the customer pay for this?',
+      'Eliminate duplicate approvals — one point of accountability',
+      'Automate repetitive data reformatting and entry',
+      'Set minimum viable documentation standards — enough, not more'
+    ]
+  }
+];
+
+// ─── BUILD SLIDES ────────────────────────────────────────────────
+const kiosk = document.getElementById('kiosk');
+
+const slides = [];
+
+// Slide 0 — Title
+slides.push(buildTitle());
+
+// Slide 1 — DOWNTIME Overview
+slides.push(buildOverview());
+
+// Slides 2-9 — Wastes
+WASTES.forEach((w, i) => slides.push(buildWaste(w, i)));
+
+// Slide 10 — Close
+slides.push(buildClose());
+
+slides.forEach(s => kiosk.appendChild(s));
+
+function buildTitle() {
+  const el = document.createElement('div');
+  el.className = 'slide slide-title';
+  el.innerHTML = `
+    <p class="title-eyebrow">Operational Excellence Education</p>
+    <h1 class="title-main">The 8 Wastes</h1>
+    <p class="title-sub">Every day, in every process, waste is consuming time, money, and energy that could be creating value. Learn to see it.</p>
+    <p class="title-stat">Manufacturing &nbsp;·&nbsp; Distribution &nbsp;·&nbsp; Office</p>
+  `;
+  return el;
+}
+
+function buildOverview() {
+  const colors = WASTES.map(w => w.color);
+  const el = document.createElement('div');
+  el.className = 'slide slide-overview';
+  el.innerHTML = `
+    <div class="overview-header">
+      <p class="overview-title">The 8 Wastes — Remember with</p>
+      <div class="overview-word">${WASTES.map((w,i) => `<span style="color:${w.color}">${w.letter}</span>`).join('')}<span style="color:#555">...</span></div>
+    </div>
+    <div class="overview-grid">
+      ${WASTES.map(w => `
+        <div class="overview-card" style="--card-accent:${w.color}">
+          <div class="overview-letter">${w.letter}</div>
+          <div class="overview-name">${w.name}</div>
+          <div class="overview-def">${w.def.split(' ').slice(0,12).join(' ')}…</div>
+        </div>
+      `).join('')}
+    </div>
+  `;
+  return el;
+}
+
+function buildWaste(w, i) {
+  const el = document.createElement('div');
+  el.className = 'slide slide-waste';
+  el.style.setProperty('--waste-color', w.color);
+  el.innerHTML = `
+    <div class="waste-sidebar" style="background: linear-gradient(160deg, ${w.color}cc, ${w.color}88)">
+      <div class="waste-big-letter">${w.letter}</div>
+      <div class="waste-letter-front">${w.letter}</div>
+      <div class="waste-name-sidebar">${w.name}</div>
+      <div class="waste-number">Waste ${i+1} of 8</div>
+    </div>
+    <div class="waste-main">
+      <p class="waste-def">${w.def}</p>
+      <p class="waste-stat">${w.stat}</p>
+      <div class="env-grid">
+        ${w.envs.map(env => `
+          <div class="env-card">
+            <div class="env-label"><span>${env.icon}</span>${env.label}</div>
+            <ul class="env-list">
+              ${env.examples.slice(0,3).map(e => `<li>${e}</li>`).join('')}
+            </ul>
+          </div>
+        `).join('')}
+      </div>
+      <div class="action-grid">
+        <div class="action-card">
+          <div class="action-label spot">&#128270; How to Spot It</div>
+          <ul class="action-list spot">
+            ${w.spot.slice(0,3).map(s => `<li>${s}</li>`).join('')}
+          </ul>
+        </div>
+        <div class="action-card">
+          <div class="action-label fix">&#128295; How to Fix It</div>
+          <ul class="action-list fix">
+            ${w.fix.slice(0,3).map(f => `<li>${f}</li>`).join('')}
+          </ul>
+        </div>
+      </div>
+    </div>
+  `;
+  return el;
+}
+
+function buildClose() {
+  const el = document.createElement('div');
+  el.className = 'slide slide-close';
+  el.innerHTML = `
+    <p class="close-eyebrow">The Opportunity</p>
+    <h2 class="close-headline">When we <em>eliminate waste</em>, everyone wins.</h2>
+    <p class="close-body">Waste is not someone's fault. It is built into every process that has never been challenged. The people closest to the work are the first to see it — and the best positioned to fix it.</p>
+    <div class="close-cards">
+      <div class="close-card">
+        <div class="close-card-icon">👁</div>
+        <div class="close-card-title">See It</div>
+        <div class="close-card-body">Learn to recognize waste in your daily work. Every delay, defect, and extra step is a signal.</div>
+      </div>
+      <div class="close-card">
+        <div class="close-card-icon">🗣</div>
+        <div class="close-card-title">Name It</div>
+        <div class="close-card-body">Call it what it is. "That's a waiting waste." "That's a motion problem." Shared language drives shared action.</div>
+      </div>
+      <div class="close-card">
+        <div class="close-card-icon">🔧</div>
+        <div class="close-card-title">Fix It</div>
+        <div class="close-card-body">No improvement is too small. One fix, one idea, one conversation — that is how change starts.</div>
+      </div>
+    </div>
+  `;
+  return el;
+}
+
+// ─── NAVIGATION ──────────────────────────────────────────────────
+let current = 0;
+let timer = null;
+let startTime = null;
+let pb = document.getElementById('progress-bar');
+let rafId = null;
+const DURATION = 22000; // ms per slide
+
+function updateCount() {
+  document.getElementById('slide-count').textContent = `${current + 1} / ${slides.length}`;
+}
+
+function show(idx) {
+  const prev = slides[current];
+  prev.classList.remove('active');
+  prev.classList.add('exit');
+  setTimeout(() => prev.classList.remove('exit'), 600);
+
+  current = ((idx % slides.length) + slides.length) % slides.length;
+  slides[current].classList.add('active');
+  updateCount();
+  startTimer();
+}
+
+function go(dir) {
+  show(current + dir);
+}
+
+function startTimer() {
+  clearTimeout(timer);
+  cancelAnimationFrame(rafId);
+  pb.style.transition = 'none';
+  pb.style.width = '0%';
+  startTime = performance.now();
+
+  function tick(now) {
+    const elapsed = now - startTime;
+    const pct = Math.min(elapsed / DURATION * 100, 100);
+    pb.style.width = pct + '%';
+    if (pct < 100) {
+      rafId = requestAnimationFrame(tick);
+    }
+  }
+  rafId = requestAnimationFrame(tick);
+  timer = setTimeout(() => go(1), DURATION);
+}
+
+// Keyboard nav
+document.addEventListener('keydown', e => {
+  if (e.key === 'ArrowRight' || e.key === ' ') go(1);
+  if (e.key === 'ArrowLeft') go(-1);
+  if (e.key === 'f' || e.key === 'F') toggleFS();
+});
+
+// Touch nav
+let touchStartX = 0;
+document.addEventListener('touchstart', e => { touchStartX = e.touches[0].clientX; });
+document.addEventListener('touchend', e => {
+  const dx = e.changedTouches[0].clientX - touchStartX;
+  if (Math.abs(dx) > 50) go(dx < 0 ? 1 : -1);
+});
+
+// Fullscreen
+function toggleFS() {
+  if (!document.fullscreenElement) {
+    document.documentElement.requestFullscreen?.();
+  } else {
+    document.exitFullscreen?.();
+  }
+}
+
+// Init
+slides[0].classList.add('active');
+updateCount();
+startTimer();
+</script>
+</body>
+</html>
