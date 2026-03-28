@@ -1,0 +1,13 @@
+services:
+  kiosk-magnetsafety:
+    build: .
+    container_name: kiosk-magnetsafety
+    restart: unless-stopped
+    ports:
+      - "3400:80"
+    networks:
+      - n0v8v_n0v8v-net
+
+networks:
+  n0v8v_n0v8v-net:
+    external: true
