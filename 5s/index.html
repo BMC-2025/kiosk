@@ -1,0 +1,1144 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
+    <title>5S — Workplace Excellence</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@400;500;600;700;800&family=Inter:wght@300;400;500;600&display=swap" rel="stylesheet">
+    <style>
+        *, *::before, *::after { margin: 0; padding: 0; box-sizing: border-box; }
+
+        :root {
+            --bg: #07070F;
+            --panel: rgba(255,255,255,0.045);
+            --panel-border: rgba(255,255,255,0.09);
+            --text: #F2F2F7;
+            --muted: rgba(242,242,247,0.58);
+        }
+
+        html, body {
+            width: 100%; height: 100%;
+            overflow: hidden;
+            background: var(--bg);
+            color: var(--text);
+            font-family: 'Inter', -apple-system, sans-serif;
+            -webkit-font-smoothing: antialiased;
+        }
+
+        /* Subtle grain overlay */
+        body::after {
+            content: '';
+            position: fixed;
+            inset: 0;
+            opacity: 0.025;
+            background-image: url("data:image/svg+xml,%3Csvg viewBox='0 0 256 256' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.85' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)'/%3E%3C/svg%3E");
+            pointer-events: none;
+            z-index: 9998;
+        }
+
+        /* ======================== SLIDESHOW ======================== */
+        #slideshow {
+            position: relative;
+            width: 100vw;
+            height: 100vh;
+        }
+
+        .slide {
+            position: absolute;
+            inset: 0;
+            opacity: 0;
+            transform: scale(0.985);
+            transition: opacity 0.75s ease, transform 0.75s ease;
+            pointer-events: none;
+            display: flex;
+            flex-direction: column;
+        }
+
+        .slide.active {
+            opacity: 1;
+            transform: scale(1);
+            pointer-events: all;
+        }
+
+        /* ======================== PROGRESS BAR ======================== */
+        #progress-track {
+            position: fixed;
+            bottom: 0; left: 0;
+            width: 100%; height: 4px;
+            background: rgba(255,255,255,0.08);
+            z-index: 9999;
+        }
+
+        #progress-fill {
+            height: 100%;
+            width: 0%;
+            background: rgba(255,255,255,0.55);
+            will-change: width;
+        }
+
+        #slide-counter {
+            position: fixed;
+            bottom: 12px; right: 22px;
+            font-size: 13px;
+            letter-spacing: 1.5px;
+            color: rgba(255,255,255,0.22);
+            z-index: 9999;
+        }
+
+        /* ======================== NAVIGATION ======================== */
+        #nav-prev, #nav-next {
+            position: fixed;
+            top: 0; height: 100%;
+            width: 10%;
+            z-index: 100;
+            display: flex;
+            align-items: center;
+            cursor: pointer;
+        }
+
+        #nav-prev { left: 0; justify-content: flex-start; padding-left: 18px; }
+        #nav-next { right: 0; justify-content: flex-end; padding-right: 18px; }
+
+        .nav-arrow {
+            width: 50px; height: 50px;
+            border-radius: 50%;
+            background: rgba(255,255,255,0.07);
+            border: 1px solid rgba(255,255,255,0.12);
+            color: rgba(255,255,255,0.55);
+            font-size: 20px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            opacity: 0;
+            transition: opacity 0.3s;
+        }
+
+        #nav-prev:hover .nav-arrow,
+        #nav-next:hover .nav-arrow { opacity: 1; }
+
+        #fs-btn {
+            position: fixed;
+            top: 16px; right: 16px;
+            z-index: 9999;
+            background: rgba(255,255,255,0.06);
+            border: 1px solid rgba(255,255,255,0.1);
+            color: rgba(255,255,255,0.35);
+            padding: 8px 11px;
+            border-radius: 8px;
+            cursor: pointer;
+            font-size: 14px;
+            opacity: 0;
+            transition: opacity 0.3s;
+        }
+
+        body:hover #fs-btn { opacity: 1; }
+
+        /* ======================== TITLE SLIDE ======================== */
+        .slide-title {
+            background: radial-gradient(ellipse at 50% 38%, #16162a 0%, #07070F 65%);
+            align-items: center;
+            justify-content: center;
+            gap: 22px;
+            text-align: center;
+        }
+
+        .title-eyebrow {
+            font-size: clamp(14px, 1.1vw, 18px);
+            letter-spacing: 5px;
+            text-transform: uppercase;
+            color: var(--muted);
+            font-weight: 500;
+        }
+
+        .title-main {
+            font-family: 'Space Grotesk', sans-serif;
+            font-size: clamp(100px, 18vw, 180px);
+            font-weight: 800;
+            letter-spacing: -8px;
+            line-height: 0.85;
+            background: linear-gradient(135deg, #ffffff 0%, rgba(255,255,255,0.55) 100%);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
+        }
+
+        .title-sub {
+            font-size: clamp(18px, 1.8vw, 26px);
+            color: var(--muted);
+            font-weight: 300;
+            max-width: 660px;
+            line-height: 1.6;
+        }
+
+        .s-pills {
+            display: flex;
+            gap: 10px;
+            flex-wrap: wrap;
+            justify-content: center;
+            margin-top: 14px;
+        }
+
+        .s-pill {
+            padding: 10px 24px;
+            border-radius: 100px;
+            font-family: 'Space Grotesk', sans-serif;
+            font-weight: 700;
+            font-size: clamp(14px, 1.3vw, 18px);
+            color: white;
+        }
+
+        /* ======================== OVERVIEW SLIDE ======================== */
+        .slide-overview {
+            padding: 44px 52px 56px;
+            gap: 26px;
+        }
+
+        .overview-header { text-align: center; }
+
+        .overview-header h2 {
+            font-family: 'Space Grotesk', sans-serif;
+            font-size: clamp(30px, 3.4vw, 50px);
+            font-weight: 700;
+            letter-spacing: -1px;
+        }
+
+        .overview-header p {
+            font-size: clamp(16px, 1.5vw, 22px);
+            color: var(--muted);
+            margin-top: 10px;
+            max-width: 780px;
+            margin-left: auto;
+            margin-right: auto;
+            line-height: 1.6;
+        }
+
+        .overview-grid {
+            display: grid;
+            grid-template-columns: repeat(5, 1fr);
+            gap: 16px;
+            flex: 1;
+        }
+
+        .overview-card {
+            background: var(--panel);
+            border: 1px solid var(--panel-border);
+            border-top: 4px solid var(--card-color, rgba(255,255,255,0.3));
+            border-radius: 14px;
+            padding: 26px 20px;
+            display: flex;
+            flex-direction: column;
+            gap: 10px;
+        }
+
+        .overview-card .s-num {
+            font-family: 'Space Grotesk', sans-serif;
+            font-size: clamp(48px, 5.5vw, 72px);
+            font-weight: 800;
+            color: var(--card-color);
+            line-height: 1;
+        }
+
+        .overview-card .s-name {
+            font-family: 'Space Grotesk', sans-serif;
+            font-size: clamp(18px, 1.8vw, 24px);
+            font-weight: 700;
+        }
+
+        .overview-card .s-japanese {
+            font-size: clamp(13px, 1.1vw, 16px);
+            color: var(--muted);
+            letter-spacing: 1px;
+        }
+
+        .overview-card .s-desc {
+            font-size: clamp(13px, 1.2vw, 17px);
+            color: var(--muted);
+            line-height: 1.6;
+            flex: 1;
+            margin-top: 6px;
+        }
+
+        /* ======================== CONCEPT SLIDE ======================== */
+        .slide-concept {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            height: 100%;
+        }
+
+        .concept-left {
+            position: relative;
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            padding: 60px 52px;
+            gap: 22px;
+            overflow: hidden;
+        }
+
+        .concept-left::before {
+            content: '';
+            position: absolute;
+            inset: 0;
+            background: radial-gradient(ellipse at 90% 50%, var(--pillar-color) 0%, transparent 60%);
+            opacity: 0.07;
+            pointer-events: none;
+        }
+
+        .concept-ghost-num {
+            font-family: 'Space Grotesk', sans-serif;
+            font-size: clamp(140px, 22vw, 260px);
+            font-weight: 800;
+            line-height: 1;
+            opacity: 0.08;
+            position: absolute;
+            top: -20px;
+            right: 10px;
+            color: var(--pillar-color);
+            pointer-events: none;
+            user-select: none;
+        }
+
+        .concept-eyebrow {
+            font-size: clamp(13px, 1.1vw, 16px);
+            letter-spacing: 4px;
+            text-transform: uppercase;
+            color: var(--muted);
+            font-weight: 600;
+            position: relative;
+        }
+
+        .concept-name {
+            font-family: 'Space Grotesk', sans-serif;
+            font-size: clamp(56px, 7.5vw, 96px);
+            font-weight: 800;
+            letter-spacing: -2px;
+            line-height: 0.95;
+            color: var(--pillar-color);
+            position: relative;
+        }
+
+        .concept-japanese {
+            font-size: clamp(16px, 1.5vw, 20px);
+            color: var(--pillar-color);
+            opacity: 0.65;
+            position: relative;
+            letter-spacing: 1.5px;
+        }
+
+        .concept-tagline {
+            font-size: clamp(20px, 2.1vw, 28px);
+            font-weight: 300;
+            line-height: 1.45;
+            position: relative;
+            padding-left: 20px;
+            border-left: 3px solid var(--pillar-color);
+            color: rgba(242,242,247,0.9);
+            margin-top: 6px;
+        }
+
+        .concept-right {
+            padding: 56px 52px 56px 44px;
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            gap: 22px;
+            background: rgba(255,255,255,0.018);
+            border-left: 1px solid var(--panel-border);
+        }
+
+        .concept-right-label {
+            font-size: clamp(12px, 1vw, 15px);
+            letter-spacing: 4px;
+            text-transform: uppercase;
+            color: var(--muted);
+            font-weight: 600;
+        }
+
+        .concept-points {
+            list-style: none;
+            display: flex;
+            flex-direction: column;
+            gap: 18px;
+        }
+
+        .concept-points li {
+            display: flex;
+            gap: 16px;
+            align-items: flex-start;
+            font-size: clamp(17px, 1.7vw, 24px);
+            line-height: 1.5;
+            color: rgba(242,242,247,0.88);
+        }
+
+        .concept-dot {
+            width: 8px;
+            height: 8px;
+            border-radius: 50%;
+            background: var(--pillar-color);
+            flex-shrink: 0;
+            margin-top: 9px;
+        }
+
+        .concept-quote {
+            margin-top: 4px;
+            padding: 20px 22px;
+            background: var(--panel);
+            border-radius: 10px;
+            border-left: 3px solid var(--pillar-color);
+            font-size: clamp(15px, 1.4vw, 19px);
+            font-style: italic;
+            color: var(--muted);
+            line-height: 1.6;
+        }
+
+        /* ======================== EXAMPLES SLIDE ======================== */
+        .slide-examples {
+            padding: 38px 52px 56px;
+            gap: 22px;
+        }
+
+        .examples-header {
+            display: flex;
+            align-items: center;
+            gap: 16px;
+        }
+
+        .pillar-tag {
+            padding: 6px 18px;
+            border-radius: 100px;
+            font-family: 'Space Grotesk', sans-serif;
+            font-weight: 700;
+            font-size: clamp(14px, 1.2vw, 17px);
+            color: white;
+            flex-shrink: 0;
+        }
+
+        .examples-header h2 {
+            font-family: 'Space Grotesk', sans-serif;
+            font-size: clamp(26px, 3vw, 40px);
+            font-weight: 700;
+            letter-spacing: -0.5px;
+        }
+
+        .examples-cols {
+            display: grid;
+            grid-template-columns: repeat(3, 1fr);
+            gap: 20px;
+            flex: 1;
+        }
+
+        .env-card {
+            background: var(--panel);
+            border: 1px solid var(--panel-border);
+            border-radius: 14px;
+            padding: 26px 24px;
+            display: flex;
+            flex-direction: column;
+            gap: 18px;
+        }
+
+        .env-header {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            border-bottom: 1px solid var(--panel-border);
+            padding-bottom: 14px;
+        }
+
+        .env-icon { font-size: 28px; }
+
+        .env-name {
+            font-family: 'Space Grotesk', sans-serif;
+            font-size: clamp(18px, 1.9vw, 26px);
+            font-weight: 700;
+        }
+
+        .env-section {
+            display: flex;
+            flex-direction: column;
+            gap: 10px;
+        }
+
+        .env-section-label {
+            font-size: clamp(12px, 0.9vw, 15px);
+            letter-spacing: 3px;
+            text-transform: uppercase;
+            font-weight: 700;
+        }
+
+        .env-section-label.spot { color: #E8705A; }
+        .env-section-label.fix  { color: #5AB87A; }
+
+        .env-items {
+            list-style: none;
+            display: flex;
+            flex-direction: column;
+            gap: 10px;
+        }
+
+        .env-items li {
+            display: flex;
+            gap: 10px;
+            align-items: flex-start;
+            font-size: clamp(15px, 1.55vw, 21px);
+            line-height: 1.45;
+            color: rgba(242,242,247,0.85);
+        }
+
+        .env-items.spot li::before {
+            content: '◉';
+            flex-shrink: 0;
+            color: #E8705A;
+            font-size: 10px;
+            margin-top: 5px;
+        }
+
+        .env-items.fix li::before {
+            content: '✓';
+            flex-shrink: 0;
+            color: #5AB87A;
+            font-size: 14px;
+            margin-top: 2px;
+        }
+
+        /* ======================== WHY SLIDE ======================== */
+        .slide-why {
+            align-items: center;
+            justify-content: center;
+            gap: 36px;
+            padding: 56px;
+            text-align: center;
+            background: radial-gradient(ellipse at 50% 30%, #141428 0%, #07070F 65%);
+        }
+
+        .why-header h2 {
+            font-family: 'Space Grotesk', sans-serif;
+            font-size: clamp(38px, 5.5vw, 72px);
+            font-weight: 800;
+            letter-spacing: -2px;
+        }
+
+        .why-header p {
+            font-size: clamp(16px, 1.6vw, 22px);
+            color: var(--muted);
+            margin-top: 12px;
+            max-width: 700px;
+            line-height: 1.6;
+        }
+
+        .why-grid {
+            display: grid;
+            grid-template-columns: repeat(4, 1fr);
+            gap: 20px;
+            width: 100%;
+            max-width: 1120px;
+        }
+
+        .why-card {
+            background: var(--panel);
+            border: 1px solid var(--panel-border);
+            border-radius: 14px;
+            padding: 32px 20px;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            gap: 12px;
+            text-align: center;
+        }
+
+        .why-icon { font-size: 36px; }
+
+        .why-label {
+            font-family: 'Space Grotesk', sans-serif;
+            font-size: clamp(20px, 2.2vw, 28px);
+            font-weight: 700;
+        }
+
+        .why-desc {
+            font-size: clamp(14px, 1.35vw, 18px);
+            color: var(--muted);
+            line-height: 1.6;
+        }
+
+        /* ======================== CTA SLIDE ======================== */
+        .slide-cta {
+            background: radial-gradient(ellipse at 50% 45%, #141428 0%, #07070F 65%);
+            align-items: center;
+            justify-content: center;
+            gap: 30px;
+            padding: 56px;
+            text-align: center;
+        }
+
+        .cta-header h2 {
+            font-family: 'Space Grotesk', sans-serif;
+            font-size: clamp(50px, 7vw, 90px);
+            font-weight: 800;
+            letter-spacing: -3px;
+        }
+
+        .cta-header p {
+            font-size: clamp(17px, 1.7vw, 22px);
+            color: var(--muted);
+            margin-top: 12px;
+            max-width: 620px;
+            line-height: 1.6;
+        }
+
+        .cta-cards {
+            display: grid;
+            grid-template-columns: repeat(3, 1fr);
+            gap: 20px;
+            max-width: 1040px;
+            width: 100%;
+        }
+
+        .cta-card {
+            background: var(--panel);
+            border: 1px solid var(--panel-border);
+            border-radius: 14px;
+            padding: 28px 24px;
+            display: flex;
+            flex-direction: column;
+            gap: 12px;
+            align-items: flex-start;
+            text-align: left;
+        }
+
+        .cta-num {
+            font-family: 'Space Grotesk', sans-serif;
+            font-size: clamp(48px, 5.5vw, 72px);
+            font-weight: 800;
+            opacity: 0.18;
+            line-height: 1;
+        }
+
+        .cta-title {
+            font-family: 'Space Grotesk', sans-serif;
+            font-size: clamp(18px, 1.8vw, 24px);
+            font-weight: 700;
+        }
+
+        .cta-desc {
+            font-size: clamp(15px, 1.4vw, 19px);
+            color: var(--muted);
+            line-height: 1.55;
+        }
+
+        .cta-footer {
+            font-size: clamp(15px, 1.4vw, 19px);
+            color: var(--muted);
+            max-width: 640px;
+            line-height: 1.7;
+        }
+
+        .cta-footer strong { color: var(--text); }
+    </style>
+</head>
+<body>
+
+<div id="slideshow"></div>
+
+<div id="progress-track">
+    <div id="progress-fill"></div>
+</div>
+
+<div id="slide-counter"></div>
+
+<div id="nav-prev"><div class="nav-arrow">&#8592;</div></div>
+<div id="nav-next"><div class="nav-arrow">&#8594;</div></div>
+
+<button id="fs-btn" title="Fullscreen (F)">&#x26F6;</button>
+
+<script>
+// ============================================================
+// CONFIGURATION
+// ============================================================
+const SLIDE_DURATION = 20000; // ms — 20 seconds per slide for factory reading
+
+// ============================================================
+// CONTENT DATA
+// ============================================================
+const pillars = [
+    {
+        id: 'sort', num: '1', japanese: 'Seiri', name: 'Sort', color: '#E63946',
+        tagline: 'Remove what doesn\'t belong. Keep only what is truly needed.',
+        points: [
+            'Evaluate every item: Does it need to be here? Is it needed now?',
+            'Use Red Tags to flag items for evaluation — not immediate removal',
+            'Establish a holding zone: 30 days to decide, then it goes',
+            'If it has no purpose, it has no place in the workspace'
+        ],
+        quote: '"When in doubt, move it out." — 5S Principle',
+        examples: {
+            manufacturing: {
+                icon: '⚙️',
+                spot: [
+                    'Tools not used in 30+ days still taking up workstation space',
+                    'Broken fixtures or gauges stored "just in case" with no action plan'
+                ],
+                fix: [
+                    'Run a Red Tag event — evaluate everything in the zone as a team',
+                    'Set a 30-day rule: unused items are relocated or removed, no exceptions'
+                ]
+            },
+            distribution: {
+                icon: '📦',
+                spot: [
+                    'Damaged pallets piling up near active receiving and staging areas',
+                    'Obsolete label versions mixed in with current stock at pick locations'
+                ],
+                fix: [
+                    'Separate quarantine zone for damaged goods — completely away from active ops',
+                    'Weekly dock walk: anything broken or obsolete gets tagged and dispositioned'
+                ]
+            },
+            office: {
+                icon: '💼',
+                spot: [
+                    'Shared drive folders full of files no one has opened in years',
+                    'Outdated forms and old templates still circulating by habit'
+                ],
+                fix: [
+                    'Annual digital Red Tag: every shared folder reviewed and cleaned',
+                    'Attach expiration dates to all forms, templates, and policy documents'
+                ]
+            }
+        }
+    },
+    {
+        id: 'set', num: '2', japanese: 'Seiton', name: 'Set in Order', color: '#2196F3',
+        tagline: 'A place for everything. Everything in its place.',
+        points: [
+            'The 30-Second Rule: anyone should locate any item in under 30 seconds',
+            'Visual management makes the right place obvious — labels, markings, shadow boards',
+            'Design storage around frequency: most-used items closest, least-used furthest',
+            'The correct location should be obvious. The wrong location should feel wrong.'
+        ],
+        quote: '"You shouldn\'t have to think about where something goes. It should be obvious."',
+        examples: {
+            manufacturing: {
+                icon: '⚙️',
+                spot: [
+                    'Operators spending more than 30 seconds searching for common tools',
+                    'WIP accumulating wherever floor space exists — no designated zones'
+                ],
+                fix: [
+                    'Shadow boards with tool outlines at every workstation — missing is visible',
+                    'Floor tape zones for WIP, scrap, and finished goods — enforced every shift'
+                ]
+            },
+            distribution: {
+                icon: '📦',
+                spot: [
+                    'Pick locations changed without signage updates — pickers learn the hard way',
+                    'Similar products in adjacent slots causing consistent mis-picks'
+                ],
+                fix: [
+                    'Slotting strategy: place by pick frequency and weight — heaviest at mid-shelf',
+                    'Color-coded rack sections by product family with photo pick aids at location'
+                ]
+            },
+            office: {
+                icon: '💼',
+                spot: [
+                    '"Where\'s the latest version?" asked multiple times a day — by everyone',
+                    'Shared supplies borrowed without being returned to their designated location'
+                ],
+                fix: [
+                    'Shared drive structure with clear folder hierarchy — posted and enforced',
+                    'Labeled supply stations with visible quantities and a reorder trigger point'
+                ]
+            }
+        }
+    },
+    {
+        id: 'shine', num: '3', japanese: 'Seiso', name: 'Shine', color: '#E8A020',
+        tagline: 'Clean to inspect. Inspect to detect.',
+        points: [
+            'Cleaning is an inspection process — not just a housekeeping task',
+            'Grime and clutter hide problems before they become failures or injuries',
+            'Every area has a named owner — accountability drives consistency',
+            'Daily resets prevent gradual decay — small habits beat large cleanups'
+        ],
+        quote: '"A clean machine tells you when something is wrong. A dirty one hides it."',
+        examples: {
+            manufacturing: {
+                icon: '⚙️',
+                spot: [
+                    'Machine leaks hidden under accumulated grime and coolant buildup',
+                    'Floor oil slicks ignored until someone slips or a product is contaminated'
+                ],
+                fix: [
+                    'Daily machine wipe-down at shift start and end — cleaning reveals leaks early',
+                    'Filter change schedules posted at each machine — reviewed during every audit'
+                ]
+            },
+            distribution: {
+                icon: '📦',
+                spot: [
+                    'Dock floor debris creating active trip and slip hazards around traffic areas',
+                    'Conveyor accumulating dust near sensors — causing jams and slowdowns'
+                ],
+                fix: [
+                    'End-of-shift floor sweep is non-negotiable: 5 minutes, every shift, signed',
+                    'Weekly conveyor and sensor cleaning with compressed air — logged and tracked'
+                ]
+            },
+            office: {
+                icon: '💼',
+                spot: [
+                    'Desk clutter burying urgent items — "I forgot about that email" is a symptom',
+                    'Shared spaces left in disarray after use — break rooms, conference rooms, desks'
+                ],
+                fix: [
+                    'End-of-day desk reset: clear to a clean baseline in under two minutes',
+                    'Shared space protocol posted in every common area — everyone is responsible'
+                ]
+            }
+        }
+    },
+    {
+        id: 'standardize', num: '4', japanese: 'Seiketsu', name: 'Standardize', color: '#43A047',
+        tagline: 'Make the right way the easy way.',
+        points: [
+            'Codify Sort, Set in Order, and Shine into visible, written standards',
+            'SOPs belong at the point of use — not in a binder on someone\'s desk',
+            'Standards eliminate variation between operators, shifts, and locations',
+            'When everyone works the same right way, problems become immediately visible'
+        ],
+        quote: '"A standard that is not written and posted is not a standard at all."',
+        examples: {
+            manufacturing: {
+                icon: '⚙️',
+                spot: [
+                    'Shift A and Shift B set up the same machine differently — quality varies accordingly',
+                    'No visual reference at the machine — operators rely on memory and habit'
+                ],
+                fix: [
+                    'Laminated visual SOP at each workstation — photo-based, not text-heavy binders',
+                    'Shift handoff checklist signed by outgoing and confirmed by incoming operator'
+                ]
+            },
+            distribution: {
+                icon: '📦',
+                spot: [
+                    'Receiving quality varies based entirely on who shows up that day',
+                    'Label placement inconsistent across packers — causing downstream scan failures'
+                ],
+                fix: [
+                    'Laminated receiving checklist at every dock door — same process, every time',
+                    'Label placement guide with exact position posted visibly at every packing station'
+                ]
+            },
+            office: {
+                icon: '💼',
+                spot: [
+                    'Proposals and reports look different depending on who wrote them',
+                    'Onboarding is "follow someone around and figure it out" — knowledge stays tribal'
+                ],
+                fix: [
+                    'Document templates for every common output — stored where everyone can find them',
+                    'Written onboarding checklist with assigned mentors — consistent from day one'
+                ]
+            }
+        }
+    },
+    {
+        id: 'sustain', num: '5', japanese: 'Shitsuke', name: 'Sustain', color: '#8E44AD',
+        tagline: '5S is not a project. It\'s a culture.',
+        points: [
+            'Discipline is a system — build it into daily routines, not willpower',
+            'Regular audits make accountability visible and continuous',
+            'Leadership must be seen participating — adoption follows the example set at the top',
+            'Recognize improvement publicly — what gets celebrated gets repeated'
+        ],
+        quote: '"The best 5S programs don\'t just maintain the standard — they continuously raise it."',
+        examples: {
+            manufacturing: {
+                icon: '⚙️',
+                spot: [
+                    '5S board last updated two months ago — scores never posted or discussed',
+                    '"We tried that before" is the default response to every new improvement idea'
+                ],
+                fix: [
+                    'Weekly 5S walk-through by supervisor — scored, posted, and briefly discussed',
+                    'Quarterly recognition for the best improvement idea by team or work area'
+                ]
+            },
+            distribution: {
+                icon: '📦',
+                spot: [
+                    '5S standards visibly relax the moment order volume spikes — consistency breaks first',
+                    'New employees never shown the standards — they pick up habits from those around them'
+                ],
+                fix: [
+                    '5S walkthrough is part of every new hire\'s first day — the standard, not optional',
+                    'Shift-change 5S check: outgoing operator signs off, incoming operator confirms'
+                ]
+            },
+            office: {
+                icon: '💼',
+                spot: [
+                    'Good practices developed by one team never make it to any other team',
+                    '"That\'s just how it\'s done here" ends every improvement conversation before it starts'
+                ],
+                fix: [
+                    'Monthly 15-minute process improvement stand-up — every team, no exceptions',
+                    'Visible suggestion channel: anonymous submissions, reviewed by leadership weekly'
+                ]
+            }
+        }
+    }
+];
+
+// ============================================================
+// RENDER FUNCTIONS
+// ============================================================
+function renderTitle() {
+    return `<div class="slide slide-title">
+        <p class="title-eyebrow">Workplace Excellence</p>
+        <h1 class="title-main">5S</h1>
+        <p class="title-sub">A foundation for safer, smarter, more productive workplaces — in manufacturing, distribution, and every office environment</p>
+        <div class="s-pills">
+            ${pillars.map(p => `<div class="s-pill" style="background:${p.color}">${p.num} — ${p.name}</div>`).join('')}
+        </div>
+    </div>`;
+}
+
+function renderOverview() {
+    return `<div class="slide slide-overview">
+        <div class="overview-header">
+            <h2>Five Steps. One Standard. Lasting Impact.</h2>
+            <p>5S is a workplace organization method proven in manufacturing, distribution, and offices worldwide. Each S builds on the last — together they eliminate hidden waste and unlock potential already inside your operation.</p>
+        </div>
+        <div class="overview-grid">
+            ${pillars.map(p => `
+                <div class="overview-card" style="--card-color:${p.color}">
+                    <div class="s-num">${p.num}</div>
+                    <div>
+                        <div class="s-name">${p.name}</div>
+                        <div class="s-japanese">${p.japanese}</div>
+                    </div>
+                    <div class="s-desc">${p.tagline}</div>
+                </div>
+            `).join('')}
+        </div>
+    </div>`;
+}
+
+function renderConcept(p) {
+    return `<div class="slide slide-concept" style="--pillar-color:${p.color}">
+        <div class="concept-left">
+            <div class="concept-ghost-num">${p.num}</div>
+            <div class="concept-eyebrow">The ${['1st','2nd','3rd','4th','5th'][p.num-1]} S</div>
+            <div class="concept-name">${p.name}</div>
+            <div class="concept-japanese">${p.japanese}</div>
+            <div class="concept-tagline">${p.tagline}</div>
+        </div>
+        <div class="concept-right">
+            <div class="concept-right-label">What this means</div>
+            <ul class="concept-points">
+                ${p.points.map(pt => `<li><span class="concept-dot"></span><span>${pt}</span></li>`).join('')}
+            </ul>
+            <div class="concept-quote">${p.quote}</div>
+        </div>
+    </div>`;
+}
+
+function renderExamples(p) {
+    const envs = ['manufacturing', 'distribution', 'office'];
+    const labels = { manufacturing: 'Manufacturing', distribution: 'Distribution', office: 'Office' };
+
+    return `<div class="slide slide-examples">
+        <div class="examples-header">
+            <div class="pillar-tag" style="background:${p.color}">${p.name}</div>
+            <h2>${p.name} — Across Your Workplace</h2>
+        </div>
+        <div class="examples-cols">
+            ${envs.map(key => {
+                const d = p.examples[key];
+                return `<div class="env-card">
+                    <div class="env-header">
+                        <span class="env-icon">${d.icon}</span>
+                        <span class="env-name">${labels[key]}</span>
+                    </div>
+                    <div class="env-section">
+                        <div class="env-section-label spot">Spot It</div>
+                        <ul class="env-items spot">
+                            ${d.spot.map(s => `<li>${s}</li>`).join('')}
+                        </ul>
+                    </div>
+                    <div class="env-section">
+                        <div class="env-section-label fix">Fix It</div>
+                        <ul class="env-items fix">
+                            ${d.fix.map(f => `<li>${f}</li>`).join('')}
+                        </ul>
+                    </div>
+                </div>`;
+            }).join('')}
+        </div>
+    </div>`;
+}
+
+function renderWhy() {
+    const cards = [
+        { icon: '🛡️', label: 'Safety', color: '#E63946',
+          desc: 'Organized spaces eliminate trip hazards, mark critical points, and surface problems before they cause injury or damage.' },
+        { icon: '✅', label: 'Quality', color: '#43A047',
+          desc: 'Standards reduce variation between people and shifts. When everyone works the same right way, defects become visible.' },
+        { icon: '⚡', label: 'Efficiency', color: '#2196F3',
+          desc: 'Time spent searching, fixing mislabeled items, or redoing undocumented work is pure waste. 5S eliminates it at the source.' },
+        { icon: '🙌', label: 'Morale', color: '#8E44AD',
+          desc: 'People do their best work in organized environments. Pride in the workplace drives pride in the work itself.' }
+    ];
+
+    return `<div class="slide slide-why">
+        <div class="why-header">
+            <h2>Why 5S Changes Everything</h2>
+            <p>Waste costs money. Disorder costs time. Both cost more than most organizations realize. 5S makes the hidden visible — so it can be fixed.</p>
+        </div>
+        <div class="why-grid">
+            ${cards.map(c => `
+                <div class="why-card">
+                    <div class="why-icon">${c.icon}</div>
+                    <div class="why-label" style="color:${c.color}">${c.label}</div>
+                    <div class="why-desc">${c.desc}</div>
+                </div>
+            `).join('')}
+        </div>
+    </div>`;
+}
+
+function renderCTA() {
+    return `<div class="slide slide-cta">
+        <div class="cta-header">
+            <h2>Start Today</h2>
+            <p>5S doesn't require a project team or a budget. It starts with awareness — and one decision at a time.</p>
+        </div>
+        <div class="cta-cards">
+            <div class="cta-card">
+                <div class="cta-num" style="color:#E63946">1</div>
+                <div class="cta-title">Look at your space differently</div>
+                <div class="cta-desc">Walk your area and ask: Is everything here truly needed? Is it in its right place? Is it clean enough that a problem would be obvious?</div>
+            </div>
+            <div class="cta-card">
+                <div class="cta-num" style="color:#2196F3">2</div>
+                <div class="cta-title">Pick one thing and fix it</div>
+                <div class="cta-desc">You don't need to fix everything today. Find the most obvious gap in your area and address it. Then do it again tomorrow. Small changes compound.</div>
+            </div>
+            <div class="cta-card">
+                <div class="cta-num" style="color:#43A047">3</div>
+                <div class="cta-title">Raise what you see</div>
+                <div class="cta-desc">If you spot a problem you can't fix alone, name it and raise it. Improvement ideas from the people doing the work are the most valuable ones here.</div>
+            </div>
+        </div>
+        <div class="cta-footer">
+            Waste costs money. Disorder costs time. Both cost more than most people realize.<br>
+            <strong>The goal is a workplace where every person can do their best work, every day.</strong>
+        </div>
+    </div>`;
+}
+
+// ============================================================
+// SLIDESHOW ENGINE
+// ============================================================
+function buildSlides() {
+    const out = [{ type: 'title' }, { type: 'overview' }];
+    for (const p of pillars) {
+        out.push({ type: 'concept', pillar: p });
+        out.push({ type: 'examples', pillar: p });
+    }
+    out.push({ type: 'why' });
+    out.push({ type: 'cta' });
+    return out;
+}
+
+const slides = buildSlides();
+let currentIdx = 0;
+let autoTimer = null;
+let rafId = null;
+let progressStart = null;
+
+function renderAllSlides() {
+    const container = document.getElementById('slideshow');
+    container.innerHTML = slides.map((s, i) => {
+        let html = '';
+        switch (s.type) {
+            case 'title':    html = renderTitle(); break;
+            case 'overview': html = renderOverview(); break;
+            case 'concept':  html = renderConcept(s.pillar); break;
+            case 'examples': html = renderExamples(s.pillar); break;
+            case 'why':      html = renderWhy(); break;
+            case 'cta':      html = renderCTA(); break;
+        }
+        return html.replace(/^<div class="slide/, `<div data-idx="${i}" class="slide`);
+    }).join('');
+}
+
+function showSlide(idx) {
+    document.querySelectorAll('#slideshow > .slide').forEach((el, i) => {
+        el.classList.toggle('active', i === idx);
+    });
+    document.getElementById('slide-counter').textContent = `${idx + 1} / ${slides.length}`;
+    currentIdx = idx;
+    startProgress();
+}
+
+function startProgress() {
+    const fill = document.getElementById('progress-fill');
+    fill.style.width = '0%';
+    clearTimeout(autoTimer);
+    cancelAnimationFrame(rafId);
+    progressStart = performance.now();
+
+    function tick(now) {
+        const elapsed = now - progressStart;
+        fill.style.width = Math.min(100, (elapsed / SLIDE_DURATION) * 100) + '%';
+        if (elapsed < SLIDE_DURATION) rafId = requestAnimationFrame(tick);
+    }
+
+    rafId = requestAnimationFrame(tick);
+    autoTimer = setTimeout(() => showSlide((currentIdx + 1) % slides.length), SLIDE_DURATION);
+}
+
+function jump(idx) {
+    clearTimeout(autoTimer);
+    cancelAnimationFrame(rafId);
+    showSlide(idx);
+}
+
+// ============================================================
+// INIT + EVENTS
+// ============================================================
+document.addEventListener('DOMContentLoaded', () => {
+    renderAllSlides();
+    showSlide(0);
+
+    document.getElementById('nav-prev').addEventListener('click', () => jump((currentIdx - 1 + slides.length) % slides.length));
+    document.getElementById('nav-next').addEventListener('click', () => jump((currentIdx + 1) % slides.length));
+
+    document.addEventListener('keydown', (e) => {
+        if (e.key === 'ArrowRight' || e.key === ' ') { e.preventDefault(); jump((currentIdx + 1) % slides.length); }
+        else if (e.key === 'ArrowLeft') jump((currentIdx - 1 + slides.length) % slides.length);
+        else if (e.key === 'f' || e.key === 'F') toggleFullscreen();
+    });
+
+    let touchStartX = 0;
+    document.addEventListener('touchstart', (e) => { touchStartX = e.touches[0].clientX; }, { passive: true });
+    document.addEventListener('touchend', (e) => {
+        const dx = e.changedTouches[0].clientX - touchStartX;
+        if (Math.abs(dx) > 60) jump(dx < 0 ? (currentIdx + 1) % slides.length : (currentIdx - 1 + slides.length) % slides.length);
+    }, { passive: true });
+
+    document.getElementById('fs-btn').addEventListener('click', toggleFullscreen);
+});
+
+function toggleFullscreen() {
+    if (!document.fullscreenElement) document.documentElement.requestFullscreen?.().catch(() => {});
+    else document.exitFullscreen?.();
+}
+</script>
+</body>
+</html>
