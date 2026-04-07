@@ -1,0 +1,13 @@
+services:
+  kiosk-safety:
+    build: .
+    container_name: kiosk-safety
+    restart: unless-stopped
+    ports:
+      - "8350:80"
+    networks:
+      - n0v8v_n0v8v-net
+
+networks:
+  n0v8v_n0v8v-net:
+    external: true

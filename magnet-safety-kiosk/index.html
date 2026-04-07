@@ -1,0 +1,59 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=1920">
+  <title>Bunting Magnetics — Welcome</title>
+  <link rel="stylesheet" href="css/kiosk.css">
+</head>
+<body>
+  <!-- TOP ZONE: Welcome Display -->
+  <div id="welcome-zone">
+    <div id="slide-container">
+      <!-- Default brand slide -->
+      <div class="slide active" id="default-slide">
+        <div class="logo-container">
+          <svg class="bunting-logo" viewBox="0 0 400 80" xmlns="http://www.w3.org/2000/svg">
+            <rect width="400" height="80" rx="4" fill="#003366"/>
+            <text x="200" y="38" text-anchor="middle" fill="#ffffff" font-family="Arial,sans-serif" font-size="28" font-weight="bold">BUNTING</text>
+            <text x="200" y="62" text-anchor="middle" fill="#c8a951" font-family="Arial,sans-serif" font-size="14" letter-spacing="3">MAGNETICS</text>
+          </svg>
+        </div>
+        <h1 id="tagline">Innovative Magnetic Solutions</h1>
+        <p class="location">Newton, Kansas</p>
+      </div>
+      <!-- Visitor slide (hidden by default) -->
+      <div class="slide" id="visitor-slide">
+        <div class="logo-container">
+          <svg class="bunting-logo" viewBox="0 0 400 80" xmlns="http://www.w3.org/2000/svg">
+            <rect width="400" height="80" rx="4" fill="#003366"/>
+            <text x="200" y="38" text-anchor="middle" fill="#ffffff" font-family="Arial,sans-serif" font-size="28" font-weight="bold">BUNTING</text>
+            <text x="200" y="62" text-anchor="middle" fill="#c8a951" font-family="Arial,sans-serif" font-size="14" letter-spacing="3">MAGNETICS</text>
+          </svg>
+        </div>
+        <p class="welcome-label">Welcome to Bunting Magnetics</p>
+        <h1 id="visitor-name"></h1>
+        <h2 id="visitor-company"></h2>
+        <p id="visitor-host" class="host-info"></p>
+      </div>
+    </div>
+  </div>
+
+  <!-- BRAND BAR -->
+  <div id="brand-bar">
+    <span>Bunting Magnetics Co.</span>
+    <span class="separator">|</span>
+    <span>Newton, Kansas</span>
+  </div>
+
+  <!-- SAFETY TICKER -->
+  <div id="ticker-zone">
+    <div class="ticker-track" id="ticker-track">
+      <!-- Messages injected by JS (duplicated for seamless loop) -->
+    </div>
+  </div>
+
+  <script src="js/storage.js"></script>
+  <script src="js/kiosk.js"></script>
+</body>
+</html>
